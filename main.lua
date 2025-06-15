@@ -2,7 +2,7 @@ local mobs = {
     size = 30,
     x = love.graphics.getWidth() / 2 - 30,
     y = love.graphics.getHeight() / 2 - 30,
-    speed = 50, -- Réduit pour que ça soit plus doux
+    speed = 25, -- Réduit pour que ça soit plus doux
     dirX = 0,
     dirY = 0
 }
@@ -18,6 +18,9 @@ end
 function love.keypressed(key)
     if key == "p" then
         turnOn = not turnOn
+    end
+    if key == "escape" then
+        love.event.quit()
     end
 end
 
