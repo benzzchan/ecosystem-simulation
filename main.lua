@@ -1,3 +1,5 @@
+local love = require("love")
+
 local mobs = {}
 local foods = {}
 local globalTimer = 0
@@ -5,7 +7,7 @@ local turnOn = false
 local moveTimer = 0
 local moveInterval = 4
 local maxMobs = 10
-local maxFoods = 20
+local maxFoods = 4
 
 function createFood(x, y)
     local newFood = {
@@ -57,6 +59,12 @@ function moveTowardsFood(mob, food)
     end
 end
 
+function moveHungryMobs(mobs)
+    if mobs.energy == 5 then
+        mobs.speed = 50
+    end
+end
+
 function collision(mob, food)
     local distance = math.sqrt((mob.x - food.x)^2 + (mob.y - food.y)^2)
     return distance < (mob.size + food.size)
@@ -83,9 +91,19 @@ end
 function love.keypressed(key)
     if key == "p" then
         turnOn = not turnOn
-    end
-    if key == "escape" then
+    elseif key == "escape" then
         love.event.quit()
+    elseif key == "space" then
+        if #mobs < maxMobs then
+            createMob()
+        end
+    elseif key == "f" then
+        if #foods < maxFoods then
+            createFood()
+        end
+    elseif key == "c" then
+        mobs = {}
+        foods = {}
     end
 end
 
@@ -96,6 +114,8 @@ function love.update(dt)
 
         for i = #mobs, 1, -1 do
             local mob = mobs[i]
+
+            moveHungryMobs(mob)
             
             if mob.energy <= 0 then
                 removeMob(i)
@@ -183,4 +203,10 @@ function love.draw()
     love.graphics.print("Population : "..#mobs, 10, 10)
     love.graphics.print("Nourriture : "..#foods, 10, 30)
     love.graphics.print("Time: "..math.floor(globalTimer), 10, 50)
+    love.graphics.print("Controls:", 10, 80)
+    love.graphics.print("P: Play/Pause", 10, 100)
+    love.graphics.print("SPACE: Spawn mob", 10, 120)
+    love.graphics.print("F: Spawn food", 10, 140)
+    love.graphics.print("C: Clear all", 10, 160)
+    love.graphics.print("ESC: Quit", 10, 180)
 end
