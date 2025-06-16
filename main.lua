@@ -70,6 +70,23 @@ function collision(mob, food)
     return distance < (mob.size + food.size)
 end
 
+function avoidEdges(mob, margin)
+    local screenWidth = love.graphics.getWidth()
+    local screenHeight = love.graphics.getHeight()
+
+    if mob.x - mob.size < margin then
+        mob.dirX = math.abs(mob.dirX)
+    elseif mob.x + mob.size > screenWidth - margin then
+        mob.dirX = -math.abs(mob.dirX)
+    end
+
+    if mob.y - mob.size < margin then
+        mob.dirY = math.abs(mob.dirY)
+    elseif mob.y + mob.size > screenHeight - margin then
+        mob.dirY = -math.abs(mob.dirY)
+    end
+end
+
 function removeMob(index)
     table.remove(mobs, index)
 end
@@ -125,6 +142,7 @@ function love.update(dt)
                 if nearestFood then
                     moveTowardsFood(mob, nearestFood)
                 else
+                    avoidEdges(mob, 40)
                     if moveTimer >= moveInterval then
                         local direction = math.random(8)
                         mob.energy = mob.energy - 1
