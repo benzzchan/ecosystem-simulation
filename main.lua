@@ -6,8 +6,8 @@ local globalTimer = 0
 local turnOn = false
 local moveTimer = 0
 local moveInterval = 4
-local maxMobs = 10
-local maxFoods = 4
+local maxMobs = 100
+local maxFoods = 30
 
 function createFood(x, y)
     local newFood = {
@@ -60,8 +60,10 @@ function moveTowardsFood(mob, food)
 end
 
 function moveHungryMobs(mobs)
-    if mobs.energy == 5 then
+    if mobs.energy <= 5 then
         mobs.speed = 50
+    elseif mobs.energy then
+        mobs.speed = math.random(15, 25)
     end
 end
 
@@ -93,6 +95,45 @@ end
 
 function removeFood(index)
     table.remove(foods, index)
+end
+
+function mobCollision(m1, m2)
+    local distance = math.sqrt((m1.x - m2.x)^2 + (m1.y - m2.y)^2)
+    return distance < (m1.size + m2.size) * 0.8 -- ajustable
+end
+
+function reproductionMobs(seuil)
+    for i=1,#mobs do 
+        local mob1 = mobs[i]
+        for j=i+1, #mobs do
+            local mob2 = mobs[j]
+            if mobCollision(mob1, mob2) and (mob1.energy >= seuil and mob2.energy >= seuil) then
+                local x = (mob1.x + mob2.y) / 2
+                local y = (mob2.x + mob2.y) / 2
+
+                local baby = {
+                    size = 20,
+                    x = x,
+                    y = y,
+                    speed = math.random(15, 25),
+                    dirX = 0,
+                    dirY = 0,
+                    energy = 10,
+                    detectionRadius = 70,
+                    color = {
+                        (mob1.color[1] + mob2.color[1]) / 2,
+                        (mob1.color[2] + mob2.color[2]) / 2,
+                        (mob1.color[3] + mob2.color[3]) / 2
+                    }
+                }
+                
+                table.insert(mobs, baby)
+
+                mob1.energy = mob1.energy - seuil
+                mob2.energy = mob2.energy - seuil
+            end
+        end
+    end
 end
 
 function love.load()
@@ -143,6 +184,7 @@ function love.update(dt)
                     moveTowardsFood(mob, nearestFood)
                 else
                     avoidEdges(mob, 40)
+                    reproductionMobs(20)
                     if moveTimer >= moveInterval then
                         local direction = math.random(8)
                         mob.energy = mob.energy - 1
