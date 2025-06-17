@@ -11,7 +11,7 @@ local moveInterval = 4
 local maxMobs = 50
 local maxFoods = 30
 local seasonActual = "None"
-local seasonTime = 10
+local seasonTime = 60
 local indexSeason = 1
 
 function createFood(x, y)
@@ -71,15 +71,15 @@ function changeSeason()
                 createFood()
             end
         elseif seasonActual == "Autumn" then
-            if math.random() < 0.01 and #foods < maxFoods then
-                createFood()
-            end
-        elseif seasonActual == "Spring" then
             if math.random() < 0.005 and #foods < maxFoods then
                 createFood()
             end
+        elseif seasonActual == "Spring" then
+            if math.random() < 0.01 and #foods < maxFoods then
+                createFood()
+            end
         elseif seasonActual == "Winter" then
-            if math.random() < 0.001 and #foods < maxFoods then
+            if math.random() < 0.003 and #foods < maxFoods then
                 createFood()
             end
         end
