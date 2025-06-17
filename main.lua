@@ -2,12 +2,17 @@ local love = require("love")
 
 local mobs = {}
 local foods = {}
+local season = {"Summer", "Winter", "Autumn", "Spring"}
 local globalTimer = 0
+local seasonTimer = 0
 local turnOn = false
-local moveTimer = 0
+local moveTimer = 0.5
 local moveInterval = 4
-local maxMobs = 100
+local maxMobs = 50
 local maxFoods = 30
+local seasonActual = "None"
+local seasonTime = 10
+local indexSeason = 1
 
 function createFood(x, y)
     local newFood = {
@@ -46,6 +51,40 @@ function findNearestFood(mob)
     end
     
     return nearestFood
+end
+
+function changeSeason()
+    function changeSeason()
+        seasonActual = season[indexSeason]
+    
+        if seasonTimer > seasonTime then
+            seasonTimer = 0
+            indexSeason = indexSeason + 1
+            if indexSeason > #season then
+                indexSeason = 1
+            end
+            seasonActual = season[indexSeason]
+        end
+    
+        if seasonActual == "Summer" then
+            if math.random() < 0.03 and #foods < maxFoods then
+                createFood()
+            end
+        elseif seasonActual == "Autumn" then
+            if math.random() < 0.01 and #foods < maxFoods then
+                createFood()
+            end
+        elseif seasonActual == "Spring" then
+            if math.random() < 0.005 and #foods < maxFoods then
+                createFood()
+            end
+        elseif seasonActual == "Winter" then
+            if math.random() < 0.001 and #foods < maxFoods then
+                createFood()
+            end
+        end
+    end
+    
 end
 
 function moveTowardsFood(mob, food)
@@ -99,7 +138,7 @@ end
 
 function mobCollision(m1, m2)
     local distance = math.sqrt((m1.x - m2.x)^2 + (m1.y - m2.y)^2)
-    return distance < (m1.size + m2.size) * 0.8 -- ajustable
+    return distance < (m1.size + m2.size) * 0.8
 end
 
 function reproductionMobs(seuil)
@@ -167,6 +206,7 @@ end
 
 function love.update(dt)
     if turnOn then
+        seasonTimer = seasonTimer + dt
         globalTimer = globalTimer + dt
         moveTimer = moveTimer + dt
 
@@ -226,10 +266,9 @@ function love.update(dt)
         if moveTimer >= moveInterval then
             moveTimer = 0
         end
+        
+        changeSeason()
 
-        if math.random() < 0.005 and #foods < maxFoods then
-            createFood()
-        end
     end
 end
 
@@ -269,4 +308,6 @@ function love.draw()
     love.graphics.print("F: Spawn food", 10, 140)
     love.graphics.print("C: Clear all", 10, 160)
     love.graphics.print("ESC: Quit", 10, 180)
+    love.graphics.print("TimeSeason: "..math.floor(seasonTimer), 10, 200)
+    love.graphics.print("Season: "..seasonActual, 10, 220)
 end
