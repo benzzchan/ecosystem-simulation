@@ -13,7 +13,6 @@ local maxFoods = 30
 local seasonActual = "None"
 local seasonTime = 60
 local indexSeason = 1
-local maxTimeLive = 60
 
 function createFood(x, y)
     local newFood = {
