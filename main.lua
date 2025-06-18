@@ -14,11 +14,14 @@ local seasonActual = "None"
 local seasonTime = 60
 local indexSeason = 1
 
+local baseWidth, baseHeight = 800, 600
+local scaleX, scaleY
+
 function createFood(x, y)
     local newFood = {
         size = 10,
-        x = x or math.random(20, love.graphics.getWidth() - 20),
-        y = y or math.random(20, love.graphics.getHeight() - 20),
+        x = x or math.random(20, baseWidth - 20),
+        y = y or math.random(20, baseHeight - 20),
     }
     table.insert(foods, newFood)
 end
@@ -26,8 +29,8 @@ end
 function createMob(x, y)
     local newMob = {
         size = 20,
-        x = x or math.random(50, love.graphics.getWidth() - 50),
-        y = y or math.random(50, love.graphics.getHeight() - 50),
+        x = x or math.random(50, baseWidth - 50),
+        y = y or math.random(50, baseHeight - 50),
         speed = math.random(15, 25),
         dirX = 0,
         dirY = 0,
@@ -56,37 +59,34 @@ function findNearestFood(mob)
 end
 
 function changeSeason()
-    function changeSeason()
-        seasonActual = season[indexSeason]
-    
-        if seasonTimer > seasonTime then
-            seasonTimer = 0
-            indexSeason = indexSeason + 1
-            if indexSeason > #season then
-                indexSeason = 1
-            end
-            seasonActual = season[indexSeason]
+    seasonActual = season[indexSeason]
+
+    if seasonTimer > seasonTime then
+        seasonTimer = 0
+        indexSeason = indexSeason + 1
+        if indexSeason > #season then
+            indexSeason = 1
         end
-    
-        if seasonActual == "Summer" then
-            if math.random() < 0.03 and #foods < maxFoods then
-                createFood()
-            end
-        elseif seasonActual == "Autumn" then
-            if math.random() < 0.005 and #foods < maxFoods then
-                createFood()
-            end
-        elseif seasonActual == "Spring" then
-            if math.random() < 0.01 and #foods < maxFoods then
-                createFood()
-            end
-        elseif seasonActual == "Winter" then
-            if math.random() < 0.003 and #foods < maxFoods then
-                createFood()
-            end
+        seasonActual = season[indexSeason]
+    end
+
+    if seasonActual == "Summer" then
+        if math.random() < 0.03 and #foods < maxFoods then
+            createFood()
+        end
+    elseif seasonActual == "Autumn" then
+        if math.random() < 0.005 and #foods < maxFoods then
+            createFood()
+        end
+    elseif seasonActual == "Spring" then
+        if math.random() < 0.01 and #foods < maxFoods then
+            createFood()
+        end
+    elseif seasonActual == "Winter" then
+        if math.random() < 0.003 and #foods < maxFoods then
+            createFood()
         end
     end
-    
 end
 
 function moveTowardsFood(mob, food)
@@ -100,11 +100,11 @@ function moveTowardsFood(mob, food)
     end
 end
 
-function moveHungryMobs(mobs)
-    if mobs.energy <= 5 then
-        mobs.speed = 50
-    elseif mobs.energy then
-        mobs.speed = math.random(15, 25)
+function moveHungryMobs(mob)
+    if mob.energy <= 5 then
+        mob.speed = 50
+    elseif mob.energy then
+        mob.speed = math.random(15, 25)
     end
 end
 
@@ -114,8 +114,8 @@ function collision(mob, food)
 end
 
 function avoidEdges(mob, margin)
-    local screenWidth = love.graphics.getWidth()
-    local screenHeight = love.graphics.getHeight()
+    local screenWidth = baseWidth
+    local screenHeight = baseHeight
 
     if mob.x - mob.size < margin then
         mob.dirX = math.abs(mob.dirX)
@@ -158,8 +158,8 @@ function reproductionMobs(seuil)
         for j=i+1, #mobs do
             local mob2 = mobs[j]
             if mobCollision(mob1, mob2) and (mob1.energy >= seuil and mob2.energy >= seuil) then
-                local x = (mob1.x + mob2.y) / 2
-                local y = (mob2.x + mob2.y) / 2
+                local x = (mob1.x + mob2.x) / 2
+                local y = (mob1.y + mob2.y) / 2
 
                 local baby = {
                     size = 20,
@@ -188,14 +188,36 @@ function reproductionMobs(seuil)
     end
 end
 
+function borderLimit(mob)
+    if mob.x - mob.size < 0 then
+        mob.x = mob.size
+    end
+    if mob.x + mob.size > baseWidth then
+        mob.x = baseWidth - mob.size
+    end
+    if mob.y - mob.size < 0 then
+        mob.y = mob.size
+    end
+    if mob.y + mob.size > baseHeight then
+        mob.y = baseHeight - mob.size
+    end
+end
+
 function love.load()
     math.randomseed(os.time())
+    love.window.setMode(baseWidth, baseHeight, {resizable=true})
     for i = 1, 5 do
         createMob()
     end
     for i = 1, 10 do
         createFood()
     end
+    local w, h = love.graphics.getDimensions()
+    scaleX, scaleY = w / baseWidth, h / baseHeight
+end
+
+function love.resize(w, h)
+    scaleX, scaleY = w / baseWidth, h / baseHeight
 end
 
 function love.keypressed(key)
@@ -214,6 +236,11 @@ function love.keypressed(key)
     elseif key == "c" then
         mobs = {}
         foods = {}
+    elseif key == "f11" then
+        local isFullScreen = love.window.getFullscreen()
+        love.window.setFullscreen(not isFullScreen)
+        local w, h = love.graphics.getDimensions()
+        love.resize(w, h)
     end
 end
 
@@ -282,26 +309,13 @@ function love.update(dt)
         end
         
         changeSeason()
-
-    end
-end
-
-function borderLimit(mob)
-    if mob.x - mob.size < 0 then
-        mob.x = mob.size
-    end
-    if mob.x + mob.size > love.graphics.getWidth() then
-        mob.x = love.graphics.getWidth() - mob.size
-    end
-    if mob.y - mob.size < 0 then
-        mob.y = mob.size
-    end
-    if mob.y + mob.size > love.graphics.getHeight() then
-        mob.y = love.graphics.getHeight() - mob.size
     end
 end
 
 function love.draw()
+    love.graphics.push()
+    love.graphics.scale(scaleX or 1, scaleY or 1)
+
     for i, food in ipairs(foods) do
         love.graphics.setColor(0, 1, 0)
         love.graphics.circle("fill", food.x, food.y, food.size)
@@ -324,4 +338,6 @@ function love.draw()
     love.graphics.print("ESC: Quit", 10, 180)
     love.graphics.print("TimeSeason: "..math.floor(seasonTimer), 10, 200)
     love.graphics.print("Season: "..seasonActual, 10, 220)
+    
+    love.graphics.pop()
 end
