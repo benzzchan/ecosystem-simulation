@@ -35,7 +35,7 @@ function createMob(x, y)
         detectionRadius = 70,
         color = {math.random(), math.random(), math.random()},
         timerLife = 0,
-        maxTimeLive = math.random(60, 100)
+        maxTimeLive = math.random(100, 180)
     }
     table.insert(mobs, newMob)
 end
@@ -176,7 +176,7 @@ function reproductionMobs(seuil)
                         (mob1.color[3] + mob2.color[3]) / 2
                     },
                     timerLife = 0,
-                    maxTimeLive = math.random(60, 120)
+                    maxTimeLive = math.random(180, 220)
                 }
                 
                 table.insert(mobs, baby)
