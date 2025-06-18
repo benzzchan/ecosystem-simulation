@@ -13,6 +13,7 @@ local maxFoods = 30
 local seasonActual = "None"
 local seasonTime = 60
 local indexSeason = 1
+local maxTimeLive = 60
 
 function createFood(x, y)
     local newFood = {
@@ -33,7 +34,9 @@ function createMob(x, y)
         dirY = 0,
         energy = 10,
         detectionRadius = 70,
-        color = {math.random(), math.random(), math.random()}
+        color = {math.random(), math.random(), math.random()},
+        timerLife = 0,
+        maxTimeLive = math.random(60, 100)
     }
     table.insert(mobs, newMob)
 end
@@ -128,6 +131,15 @@ function avoidEdges(mob, margin)
     end
 end
 
+function mobAging(mobs)
+    for i = #mobs, 1, -1 do
+        local mob = mobs[i]
+        if mob.timerLife > mob.maxTimeLive then
+            removeMob(i)
+        end
+    end
+end
+
 function removeMob(index)
     table.remove(mobs, index)
 end
@@ -163,7 +175,9 @@ function reproductionMobs(seuil)
                         (mob1.color[1] + mob2.color[1]) / 2,
                         (mob1.color[2] + mob2.color[2]) / 2,
                         (mob1.color[3] + mob2.color[3]) / 2
-                    }
+                    },
+                    timerLife = 0,
+                    maxTimeLive = math.random(60, 120)
                 }
                 
                 table.insert(mobs, baby)
@@ -212,7 +226,7 @@ function love.update(dt)
 
         for i = #mobs, 1, -1 do
             local mob = mobs[i]
-
+            mob.timerLife = mob.timerLife + dt
             moveHungryMobs(mob)
             
             if mob.energy <= 0 then
@@ -253,6 +267,7 @@ function love.update(dt)
                 mob.y = mob.y + mob.dirY * mob.speed * dt
                 
                 borderLimit(mob)
+                mobAging(mobs)
 
                 for j = #foods, 1, -1 do
                     if collision(mob, foods[j]) then
