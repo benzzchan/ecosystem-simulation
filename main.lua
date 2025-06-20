@@ -15,12 +15,14 @@ local maxPredators = 10
 local seasonActual = "None"
 local seasonTime = 60
 local indexSeason = 1
-local isMove = false
+local speedMultiplier = 1
+local acelearateDt
+local maxSpeedMultiplier = 5
 
 local baseWidth, baseHeight = 800, 600
 local scaleX, scaleY
 
-function createFood(x, y)
+local function createFood(x, y)
     local newFood = {
         size = 10,
         x = x or math.random(20, baseWidth - 20),
@@ -29,7 +31,7 @@ function createFood(x, y)
     table.insert(foods, newFood)
 end
 
-function createPredator(x, y)
+local function createPredator(x, y)
     local newPredator = {
         size = 15,
         x = x or math.random(50, baseWidth - 50),
@@ -37,7 +39,7 @@ function createPredator(x, y)
         speed = 0,
         dirX = 0,
         dirY = 0,
-        energy = 10,
+        energy = 15,
         health = 10,
         detectionRadius = math.random(100, 120),
         color = {1, 0.2, 0.2},
@@ -47,7 +49,7 @@ function createPredator(x, y)
     table.insert(predators, newPredator)
 end
 
-function createMob(x, y)
+local function createMob(x, y)
     local newMob = {
         size = 20,
         x = x or math.random(50, baseWidth - 50),
@@ -55,7 +57,7 @@ function createMob(x, y)
         speed = 0,
         dirX = 0,
         dirY = 0,
-        energy = 10,
+        energy = 15,
         health = 10,
         foodsEaten = 0,
         detectionRadius = math.random(100, 180),
@@ -66,7 +68,7 @@ function createMob(x, y)
     table.insert(mobs, newMob)
 end
 
-function findNearestFood(mob)
+local function findNearestFood(mob)
     local nearestFood = nil
     local minDistance = mob.detectionRadius
     
@@ -81,7 +83,7 @@ function findNearestFood(mob)
     return nearestFood
 end
 
-function findNearestPredator(mob)
+local function findNearestPredator(mob)
     local nearestPredator = nil
     local minDistance = mob.detectionRadius
     
@@ -96,7 +98,7 @@ function findNearestPredator(mob)
     return nearestPredator
 end
 
-function findNearestMob(predator)
+local function findNearestMob(predator)
     local nearestMob = nil
     local minDistance = predator.detectionRadius
     
@@ -111,7 +113,7 @@ function findNearestMob(predator)
     return nearestMob
 end
 
-function changeSeason()
+local function changeSeason()
     seasonActual = season[indexSeason]
 
     if seasonTimer > seasonTime then
@@ -124,25 +126,25 @@ function changeSeason()
     end
 
     if seasonActual == "Summer" then
-        if math.random() < 0.1 and #foods < maxFoods then
+        if math.random() < 1 and #foods < maxFoods then
             createFood()
         end
     elseif seasonActual == "Autumn" then
-        if math.random() < 0.5 and #foods < maxFoods then
+        if math.random() < 0.2 and #foods < maxFoods then
             createFood()
         end
     elseif seasonActual == "Spring" then
-        if math.random() < 0.05 and #foods < maxFoods then
+        if math.random() < 0.5 and #foods < maxFoods then
             createFood()
         end
     elseif seasonActual == "Winter" then
-        if math.random() < 0.005 and #foods < maxFoods then
+        if math.random() < 0.05 and #foods < maxFoods then
             createFood()
         end
     end
 end
 
-function moveTowardsFood(mob, food)
+local function moveTowardsFood(mob, food)
     local dx = food.x - mob.x
     local dy = food.y - mob.y
     local distance = math.sqrt(dx^2 + dy^2)
@@ -153,7 +155,7 @@ function moveTowardsFood(mob, food)
     end
 end
 
-function fleeFromPredator(mob, predator)
+local function fleeFromPredator(mob, predator)
     local dx = mob.x - predator.x
     local dy = mob.y - predator.y
     local distance = math.sqrt(dx^2 + dy^2)
@@ -164,7 +166,7 @@ function fleeFromPredator(mob, predator)
     end
 end
 
-function moveTowardsMob(predator, mob)
+local function moveTowardsMob(predator, mob)
     local dx = mob.x - predator.x
     local dy = mob.y - predator.y
     local distance = math.sqrt(dx^2 + dy^2)
@@ -175,7 +177,7 @@ function moveTowardsMob(predator, mob)
     end
 end
 
-function moveHungryMobs(mob)
+local function moveHungryMobs(mob)
     if mob.energy <= 5 then
         mob.speed = 100
     elseif mob.energy then
@@ -183,7 +185,7 @@ function moveHungryMobs(mob)
     end
 end
 
-function moveHungryPredators(predator)
+local function moveHungryPredators(predator)
     if predator.energy <= 3 then
         predator.speed = 80
     else
@@ -191,17 +193,17 @@ function moveHungryPredators(predator)
     end
 end
 
-function collision(mob, food)
+local function collision(mob, food)
     local distance = math.sqrt((mob.x - food.x)^2 + (mob.y - food.y)^2)
     return distance < (mob.size + food.size)
 end
 
-function predatorMobCollision(predator, mob)
+local function predatorMobCollision(predator, mob)
     local distance = math.sqrt((predator.x - mob.x)^2 + (predator.y - mob.y)^2)
     return distance < (predator.size + mob.size) * 0.8
 end
 
-function avoidEdges(entity, margin)
+local function avoidEdges(entity, margin)
     local screenWidth = baseWidth
     local screenHeight = baseHeight
 
@@ -218,7 +220,7 @@ function avoidEdges(entity, margin)
     end
 end
 
-function mobAging(entities)
+local function mobAging(entities)
     for i = #entities, 1, -1 do
         local entity = entities[i]
         if entity.timerLife > entity.maxTimeLive then
@@ -227,24 +229,24 @@ function mobAging(entities)
     end
 end
 
-function removeMob(index)
+local function removeMob(index)
     table.remove(mobs, index)
 end
 
-function removeFood(index)
+local function removeFood(index)
     table.remove(foods, index)
 end
 
-function removePredator(index)
+local function removePredator(index)
     table.remove(predators, index)
 end
 
-function mobCollision(m1, m2)
+local function mobCollision(m1, m2)
     local distance = math.sqrt((m1.x - m2.x)^2 + (m1.y - m2.y)^2)
     return distance < (m1.size + m2.size) * 0.8
 end
 
-function reproductionMobs(seuil)
+local function reproductionMobs(seuil)
     for i=1,#mobs do 
         local mob1 = mobs[i]
         for j=i+1, #mobs do
@@ -260,7 +262,7 @@ function reproductionMobs(seuil)
                     speed = math.random(15, 25),
                     dirX = 0,
                     dirY = 0,
-                    energy = 10,
+                    energy = 15,
                     health = 10,
                     foodsEaten = 0,
                     detectionRadius = 70,
@@ -282,7 +284,7 @@ function reproductionMobs(seuil)
     end
 end
 
-function borderLimit(entity)
+local function borderLimit(entity)
     if entity.x - entity.size < 0 then
         entity.x = entity.size
     end
@@ -343,18 +345,25 @@ function love.keypressed(key)
         love.window.setFullscreen(not isFullScreen)
         local w, h = love.graphics.getDimensions()
         love.resize(w, h)
+    elseif key == "v" then
+        speedMultiplier = speedMultiplier + 1
+        if speedMultiplier > maxSpeedMultiplier then
+            speedMultiplier = 1
+        end
     end
 end
 
 function love.update(dt)
+    acelearateDt = dt * speedMultiplier
+
     if turnOn then
-        seasonTimer = seasonTimer + dt
-        globalTimer = globalTimer + dt
-        moveTimer = moveTimer + dt
+        seasonTimer = seasonTimer + acelearateDt
+        globalTimer = globalTimer + acelearateDt
+        moveTimer = moveTimer + acelearateDt
 
         for i = #mobs, 1, -1 do
             local mob = mobs[i]
-            mob.timerLife = mob.timerLife + dt
+            mob.timerLife = mob.timerLife + acelearateDt
             moveHungryMobs(mob)
             
             if mob.energy <= 0 or mob.health <= 0 then
@@ -398,8 +407,8 @@ function love.update(dt)
                     end
                 end
 
-                mob.x = mob.x + mob.dirX * mob.speed * dt
-                mob.y = mob.y + mob.dirY * mob.speed * dt
+                mob.x = mob.x + mob.dirX * mob.speed * acelearateDt
+                mob.y = mob.y + mob.dirY * mob.speed * acelearateDt
                 
                 borderLimit(mob)
 
@@ -419,7 +428,7 @@ function love.update(dt)
 
         for i = #predators, 1, -1 do
             local predator = predators[i]
-            predator.timerLife = predator.timerLife + dt
+            predator.timerLife = predator.timerLife + acelearateDt
             moveHungryPredators(predator)
             
             if predator.energy <= 0 or predator.health <= 0 then
@@ -455,8 +464,8 @@ function love.update(dt)
                     end
                 end
 
-                predator.x = predator.x + predator.dirX * predator.speed * dt
-                predator.y = predator.y + predator.dirY * predator.speed * dt
+                predator.x = predator.x + predator.dirX * predator.speed * acelearateDt
+                predator.y = predator.y + predator.dirY * predator.speed * acelearateDt
                 
                 borderLimit(predator)
 
@@ -515,6 +524,7 @@ function love.draw()
     love.graphics.print("ESC: Quit", 10, 220)
     love.graphics.print("TimeSeason: "..math.floor(seasonTimer), 10, 240)
     love.graphics.print("Season: "..seasonActual, 10, 260)
+    love.graphics.print("V : Simulation acceleration "..speedMultiplier, 10, 280)
     
     love.graphics.pop()
 end
