@@ -18,6 +18,11 @@ local indexSeason = 1
 local speedMultiplier = 1
 local acelearateDt
 local maxSpeedMultiplier = 5
+local backgroundMusic = love.audio.newSource("sound/backgroundMusic.mp3", "stream")
+local seasonChangeSound = love.audio.newSource("sound/seasonChangeSound.mp3", "static")
+local mobReproductionSound = love.audio.newSource("sound/mobReproductionSound.mp3", "static")
+local eatPredatorSound = love.audio.newSource("sound/eatPredatorSound.mp3", "static")
+local clearSound = love.audio.newSource("sound/clearSound.mp3", "static")
 
 local baseWidth, baseHeight = 800, 600
 local scaleX, scaleY
@@ -123,6 +128,7 @@ local function changeSeason()
             indexSeason = 1
         end
         seasonActual = season[indexSeason]
+        love.audio.play(seasonChangeSound)
     end
 
     if seasonActual == "Summer" then
@@ -279,6 +285,8 @@ local function reproductionMobs(seuil)
 
                 mob1.energy = mob1.energy - seuil
                 mob2.energy = mob2.energy - seuil
+
+                love.audio.play(mobReproductionSound)
             end
         end
     end
@@ -300,6 +308,7 @@ local function borderLimit(entity)
 end
 
 function love.load()
+
     math.randomseed(os.time())
     love.window.setMode(baseWidth, baseHeight, {resizable=true})
     for i = 1, 5 do
@@ -340,6 +349,7 @@ function love.keypressed(key)
         mobs = {}
         foods = {}
         predators = {}
+        love.audio.play(clearSound)
     elseif key == "f11" then
         local isFullScreen = love.window.getFullscreen()
         love.window.setFullscreen(not isFullScreen)
@@ -357,6 +367,7 @@ function love.update(dt)
     acelearateDt = dt * speedMultiplier
 
     if turnOn then
+        love.audio.play(backgroundMusic)
         seasonTimer = seasonTimer + acelearateDt
         globalTimer = globalTimer + acelearateDt
         moveTimer = moveTimer + acelearateDt
@@ -474,6 +485,7 @@ function love.update(dt)
                         mobs[j].health = mobs[j].health - 3
                         if mobs[j].health <= 0 then
                             predator.energy = predator.energy + 8
+                            love.audio.play(eatPredatorSound)
                             removeMob(j)
                         end
                     end
