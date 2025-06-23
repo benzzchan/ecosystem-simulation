@@ -2,7 +2,9 @@
 An interactive ecosystem simulation built with **LÖVE2D (Lua)** where creatures evolve, reproduce, and survive in a dynamic environment with changing seasons.
 
 <br>
-![Demo](https://github.com/KodeSeishin/ecosystem-simulation/blob/main/assets/demoScreen.png)
+
+![Demo](./assets/demoScreen.png)
+
 <br>
 
 ## About
