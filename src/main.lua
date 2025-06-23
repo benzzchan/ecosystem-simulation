@@ -1,31 +1,51 @@
 local love = require("love")
 
+-- Create tables to hold our game objects
 local mobs = {}
 local foods = {}
 local predators = {}
 local season = {"Summer", "Winter", "Autumn", "Spring"}
+
+-- Timers
 local globalTimer = 0
 local seasonTimer = 0
-local turnOn = false
 local moveTimer = 0.5
 local moveInterval = 4
+
+-- Simulation state toggle
+local turnOn = false
+
+-- Entity limits
 local maxMobs = 50
 local maxFoods = 100
 local maxPredators = 10
+
+-- Season management
 local seasonActual = "None"
 local seasonTime = 60
 local indexSeason = 1
+
+-- Simulator speed controls
 local speedMultiplier = 1
 local acelearateDt
 local maxSpeedMultiplier = 5
+
+-- Load music and sound effects
 local backgroundMusic = love.audio.newSource("sound/backgroundMusic.mp3", "stream")
 local seasonChangeSound = love.audio.newSource("sound/seasonChangeSound.mp3", "static")
 local mobReproductionSound = love.audio.newSource("sound/mobReproductionSound.mp3", "static")
 local eatPredatorSound = love.audio.newSource("sound/eatPredatorSound.mp3", "static")
 local clearSound = love.audio.newSource("sound/clearSound.mp3", "static")
 
-local baseWidth, baseHeight = 800, 600
+-- Base window dimensions for scaling the display
+local baseWidth, baseHeight = 1024, 768
 local scaleX, scaleY
+
+local function drawRightAligned(text, y)
+    local textWidth = love.graphics.getFont():getWidth(text)
+    local x = baseWidth - textWidth - 20
+    love.graphics.print(text, x, y)
+end
 
 local function createFood(x, y)
     local newFood = {
@@ -307,6 +327,10 @@ local function borderLimit(entity)
     end
 end
 
+function love.resize(w, h)
+    scaleX, scaleY = w / baseWidth, h / baseHeight
+end
+
 function love.load()
 
     math.randomseed(os.time())
@@ -321,10 +345,6 @@ function love.load()
         createPredator()
     end
     local w, h = love.graphics.getDimensions()
-    scaleX, scaleY = w / baseWidth, h / baseHeight
-end
-
-function love.resize(w, h)
     scaleX, scaleY = w / baseWidth, h / baseHeight
 end
 
@@ -523,20 +543,21 @@ function love.draw()
     end
     
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Population : "..#mobs, 10, 10)
-    love.graphics.print("Nourriture : "..#foods, 10, 30)
-    love.graphics.print("Predateurs : "..#predators, 10, 50)
-    love.graphics.print("Time: "..math.floor(globalTimer), 10, 70)
-    love.graphics.print("Controls:", 10, 100)
-    love.graphics.print("P: Play/Pause", 10, 120)
-    love.graphics.print("SPACE: Spawn mob", 10, 140)
-    love.graphics.print("F: Spawn food", 10, 160)
-    love.graphics.print("M: Spawn predator", 10, 180)
-    love.graphics.print("C: Clear all", 10, 200)
-    love.graphics.print("ESC: Quit", 10, 220)
-    love.graphics.print("TimeSeason: "..math.floor(seasonTimer), 10, 240)
-    love.graphics.print("Season: "..seasonActual, 10, 260)
-    love.graphics.print("V : Simulation acceleration "..speedMultiplier, 10, 280)
+    love.graphics.print("Population : "..#mobs, 20, 10)
+    love.graphics.print("Nourriture : "..#foods, 20, 30)
+    love.graphics.print("Predateurs : "..#predators, 20, 50)
+    love.graphics.print("Time: "..math.floor(globalTimer), 20, 70)
+    love.graphics.print("TimeSeason: "..math.floor(seasonTimer), 20, 90)
+    love.graphics.print("Season: "..seasonActual, 20, 110)
+
+    drawRightAligned("Controls", 10)
+    drawRightAligned("P: Play/Pause", 30)
+    drawRightAligned("SPACE: Spawn mob", 50)
+    drawRightAligned("F: Spawn food", 70)
+    drawRightAligned("M: Spawn predator", 90)
+    drawRightAligned("C: Clear all", 110)
+    drawRightAligned("ESC: Quit", 130)
+    drawRightAligned("V : Acceleration = "..speedMultiplier, 150)
     
     love.graphics.pop()
 end
